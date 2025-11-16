@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"cli-todo/storage"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,24 +30,17 @@ func AddTask(a *AddTaskData) error {
 		Text: a.Text,
 		Done: false,
 	}
-	Tasks = append(Tasks, task)
+	statement, err := storage.Db.Prepare("INSERT INTO tasks (task, done) VALUES (?, ?)")
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(task.Text, task.Done)
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("Добавлено: %d. [ ] %s\n", len(Tasks), a.Text)
 	return nil
-}
-
-func ListTasks() {
-	if len(Tasks) == 0 {
-		fmt.Println("Список задач пуст")
-		return
-	}
-
-	for i, task := range Tasks {
-		if task.Done {
-			fmt.Printf("%d. [x] %s\n", i+1, task.Text)
-		} else {
-			fmt.Printf("%d. [ ] %s\n", i+1, task.Text)
-		}
-	}
 }
 
 func LoadTasks() {
@@ -69,27 +63,16 @@ func SaveTask() {
 	_ = os.WriteFile("tasks.json", jsonData, 0644)
 }
 
-func DoneTask(args []string) {
-	LoadTasks()
-	if len(args) == 0 {
-		fmt.Println("Нужно ввести номер задачи")
-		return
-	}
-
-	id, err := strconv.Atoi(args[0])
+func DoneTask(id int64) error {
+	statement, err := storage.Db.Prepare("UPDATE tasks SET done = true WHERE id = ?")
 	if err != nil {
-		fmt.Println("Номер задачи должен быть числом")
-		return
+		return err
 	}
-
-	for i, task := range Tasks {
-		if task.ID == id {
-			Tasks[i].Done = true
-			fmt.Printf("Задача %d отмечена как выполненная: %s\n", id, task.Text)
-			break
-		}
+	_, err = statement.Exec(id)
+	if err != nil {
+		return err
 	}
-	SaveTask()
+	return nil
 }
 
 func DeleteTask(args []string) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 func addHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +22,6 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(data)
-	commands.LoadTasks()
 	err = commands.AddTask(&data)
 	if err != nil {
 		msg := "fail to write HTTP response: " + err.Error()
@@ -33,11 +33,10 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(msg)
 		return
 	}
-	commands.SaveTask()
 }
 
+// todo: convert to sql
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	commands.LoadTasks()
 	dataTasks, err := json.Marshal(commands.Tasks)
 	if err != nil {
 		msg := "fail to write HTTP response: " + err.Error()
@@ -58,7 +57,6 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func doneHandler(w http.ResponseWriter, r *http.Request) {
-	commands.LoadTasks()
 	taskId := r.URL.Query().Get("id")
 	if taskId == "" {
 		msg := "fail to write HTTP response: task id is required"
@@ -68,7 +66,20 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	commands.DoneTask([]string{taskId})
+	atoi, err := strconv.Atoi(taskId)
+	if err != nil {
+		msg := "taskId is invalid"
+		_, err := w.Write([]byte(msg))
+		if err != nil {
+			fmt.Println("fail to write HTTP response: " + err.Error())
+		}
+		return
+	}
+
+	err = commands.DoneTask(int64(atoi))
+	if err != nil {
+		return
+	}
 	write, err := w.Write([]byte("task done"))
 	if err != nil {
 		return
@@ -77,6 +88,7 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// todo: convert to sql
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	commands.LoadTasks()
 	taskId := r.URL.Query().Get("id")
@@ -101,6 +113,7 @@ func HTTPServer() {
 	http.HandleFunc("/list", listHandler)
 	http.HandleFunc("/done", doneHandler)
 	http.HandleFunc("/delete", deleteHandler)
+	fmt.Println("http server started")
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
