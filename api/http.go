@@ -140,13 +140,20 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func HTTPServer() {
-	http.HandleFunc("/add", addHandler)
-	http.HandleFunc("/list", listHandler)
-	http.HandleFunc("/done", doneHandler)
-	http.HandleFunc("/delete", deleteHandler)
+	router := http.NewServeMux()
+	router.HandleFunc("/add", addHandler)
+	router.HandleFunc("/list", listHandler)
+	router.HandleFunc("/done", doneHandler)
+	router.HandleFunc("/delete", deleteHandler)
+
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
 	fmt.Println("http server started")
 
-	err := http.ListenAndServe(":8080", nil)
+	err := server.ListenAndServe()
 	if err != nil {
 		fmt.Println("HTTP server error", err)
 		return
