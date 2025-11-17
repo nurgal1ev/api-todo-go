@@ -2,6 +2,7 @@ package api
 
 import (
 	"cli-todo/commands"
+	"cli-todo/storage"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -35,9 +36,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// todo: convert to sql
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	dataTasks, err := json.Marshal(commands.Tasks)
+	rows, err := storage.Db.Query("SELECT id, task, done FROM tasks")
 	if err != nil {
 		msg := "fail to write HTTP response: " + err.Error()
 		_, err := w.Write([]byte(msg))
@@ -46,6 +46,26 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Println(msg)
+		return
+	}
+	defer rows.Close()
+
+	var tasks []commands.Task
+	for rows.Next() {
+		var t commands.Task
+		err := rows.Scan(&t.ID, &t.Text, &t.Done)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("fail to scan task: " + err.Error()))
+			return
+		}
+		tasks = append(tasks, t)
+	}
+
+	dataTasks, err := json.Marshal(tasks)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("fail to marshal tasks: " + err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -88,9 +108,7 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// todo: convert to sql
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
-	commands.LoadTasks()
 	taskId := r.URL.Query().Get("id")
 	if taskId == "" {
 		msg := "fail to write HTTP response: task id is required"
@@ -100,7 +118,20 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	commands.DeleteTask([]string{taskId})
+
+	atoi, err := strconv.Atoi(taskId)
+	if err != nil {
+		msg := "taskId is invalid"
+		_, err := w.Write([]byte(msg))
+		if err != nil {
+			fmt.Println("fail to write HTTP response: " + err.Error())
+			return
+		}
+	}
+	err = commands.DeleteTask(int64(atoi))
+	if err != nil {
+		return
+	}
 	write, err := w.Write([]byte("task deleted"))
 	if err != nil {
 		return
