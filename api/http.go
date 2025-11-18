@@ -36,6 +36,40 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func updateHandler(w http.ResponseWriter, r *http.Request) {
+	taskID := r.URL.Query().Get("id")
+	atoi, err := strconv.Atoi(taskID)
+	if err != nil {
+		msg := "fail to write HTTP response: "
+		_, err := w.Write([]byte(msg))
+		if err != nil {
+			fmt.Println("fail to write HTTP response: " + err.Error())
+			return
+		}
+		fmt.Println(msg)
+		return
+	}
+	var data commands.AddTaskData
+	err = json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		msg := "fail to write HTTP response: "
+		_, err := w.Write([]byte(msg))
+		if err != nil {
+			fmt.Println("fail to write HTTP response: " + err.Error())
+			return
+		}
+		fmt.Println(msg)
+		return
+	}
+	task := commands.Task{Text: data.Text}
+	err = commands.UpdateTask(atoi, &task)
+	if err != nil {
+		w.Write([]byte("fail to update task: " + err.Error()))
+		return
+	}
+	w.Write([]byte("task updated"))
+}
+
 func listHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := storage.Db.Query("SELECT id, task, done FROM tasks")
 	if err != nil {
@@ -145,6 +179,7 @@ func HTTPServer() {
 	router.HandleFunc("/list", listHandler)
 	router.HandleFunc("/done", doneHandler)
 	router.HandleFunc("/delete", deleteHandler)
+	router.HandleFunc("/update", updateHandler)
 
 	server := http.Server{
 		Addr:    ":8080",

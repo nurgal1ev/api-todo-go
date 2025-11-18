@@ -34,6 +34,22 @@ func AddTask(a *AddTaskData) error {
 	return nil
 }
 
+func UpdateTask(id int, a *Task) error {
+	task := Task{
+		ID:   id,
+		Text: a.Text,
+	}
+	statement, err := storage.Db.Prepare("UPDATE tasks SET task = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(task.Text, task.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func DoneTask(id int64) error {
 	statement, err := storage.Db.Prepare("UPDATE tasks SET done = true WHERE id = ?")
 	if err != nil {
