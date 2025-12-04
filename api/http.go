@@ -5,6 +5,7 @@ import (
 	"cli-todo/storage"
 	"encoding/json"
 	"fmt"
+	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 )
@@ -23,7 +24,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(data)
-	err = commands.AddTask(&data)
+	err = commands.AddTask(r.Context(), &data)
 	if err != nil {
 		msg := "fail to write HTTP response: " + err.Error()
 		_, err := w.Write([]byte(msg))
@@ -61,8 +62,8 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(msg)
 		return
 	}
-	task := commands.Task{Text: data.Text}
-	err = commands.UpdateTask(atoi, &task)
+	task := storage.Task{Text: data.Text}
+	err = commands.UpdateTask(r.Context(), atoi, &task)
 	if err != nil {
 		w.Write([]byte("fail to update task: " + err.Error()))
 		return
@@ -71,31 +72,7 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := storage.Db.Query("SELECT id, task, done FROM tasks")
-	if err != nil {
-		msg := "fail to write HTTP response: " + err.Error()
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
-		return
-	}
-	defer rows.Close()
-
-	var tasks []commands.Task
-	for rows.Next() {
-		var t commands.Task
-		err := rows.Scan(&t.ID, &t.Text, &t.Done)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("fail to scan task: " + err.Error()))
-			return
-		}
-		tasks = append(tasks, t)
-	}
-
+	tasks, err := gorm.G[storage.Task](storage.Db).Find(r.Context())
 	dataTasks, err := json.Marshal(tasks)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +107,7 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = commands.DoneTask(int64(atoi))
+	err = commands.DoneTask(r.Context(), int64(atoi))
 	if err != nil {
 		return
 	}
@@ -162,7 +139,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	err = commands.DeleteTask(int64(atoi))
+	err = commands.DeleteTask(r.Context(), int64(atoi))
 	if err != nil {
 		return
 	}

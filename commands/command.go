@@ -2,7 +2,9 @@ package commands
 
 import (
 	"cli-todo/storage"
+	"context"
 	"errors"
+	"gorm.io/gorm"
 )
 
 type AddTaskData struct {
@@ -14,63 +16,38 @@ type Task struct {
 	Done bool   `json:"done"`
 }
 
-func AddTask(a *AddTaskData) error {
+func AddTask(ctx context.Context, a *AddTaskData) error {
 	if a.Text == "" {
 		return errors.New("empty text")
 	}
 
-	task := Task{
-		Text: a.Text,
-		Done: false,
-	}
-	statement, err := storage.Db.Prepare("INSERT INTO tasks (task, done) VALUES (?, ?)")
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec(task.Text, task.Done)
+	err := gorm.G[storage.Task](storage.Db).Create(ctx, &storage.Task{Text: a.Text, Done: false})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func UpdateTask(id int, a *Task) error {
-	task := Task{
-		ID:   id,
-		Text: a.Text,
-	}
-	statement, err := storage.Db.Prepare("UPDATE tasks SET task = ? WHERE id = ?")
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec(task.Text, task.ID)
+func UpdateTask(ctx context.Context, id int, task *storage.Task) error {
+	_, err := gorm.G[storage.Task](storage.Db).Where("id = ?", id).Updates(ctx, *task)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func DoneTask(id int64) error {
-	statement, err := storage.Db.Prepare("UPDATE tasks SET done = true WHERE id = ?")
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec(id)
+func DoneTask(ctx context.Context, id int64) error {
+	_, err := gorm.G[storage.Task](storage.Db).Where("id = ?", id).Updates(ctx, storage.Task{Done: true})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeleteTask(id int64) error {
-	statement, err := storage.Db.Prepare("DELETE FROM tasks WHERE id = ?")
+func DeleteTask(ctx context.Context, id int64) error {
+	_, err := gorm.G[storage.Task](storage.Db).Where("id = ?", id).Delete(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = statement.Exec(id)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

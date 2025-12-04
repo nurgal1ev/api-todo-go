@@ -1,23 +1,37 @@
 package storage
 
 import (
-	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"log"
 )
 
-var Db *sql.DB
+var Db *gorm.DB
+
+type User struct {
+	gorm.Model
+	Username     string
+	Email        string
+	PasswordHash string
+
+	Tasks []Task
+}
+type Task struct {
+	gorm.Model
+	Text string
+	Done bool
+
+	UserID uint
+	User   User
+}
 
 func NewDB() {
 	var err error
-	Db, err = sql.Open("sqlite3", "./data.db")
+	Db, err = gorm.Open(sqlite.Open("./storage.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	statement, err := Db.Prepare("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT NOT NULL, done BOOLEAN NOT NULL)")
-	if err != nil {
-		log.Fatal(err)
-	}
-	statement.Exec()
+	Db.AutoMigrate(&User{}, &Task{})
 }
