@@ -1,6 +1,7 @@
 package api
 
 import (
+	"cli-todo/auth"
 	"cli-todo/commands"
 	"cli-todo/storage"
 	"encoding/json"
@@ -157,6 +158,8 @@ func HTTPServer() {
 	router.HandleFunc("/done", doneHandler)
 	router.HandleFunc("/delete", deleteHandler)
 	router.HandleFunc("/update", updateHandler)
+	router.HandleFunc("/auth/register", auth.Register)
+	router.HandleFunc("/auth/login", auth.Login)
 
 	server := http.Server{
 		Addr:    ":8080",

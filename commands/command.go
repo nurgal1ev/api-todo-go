@@ -4,11 +4,13 @@ import (
 	"cli-todo/storage"
 	"context"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 )
 
 type AddTaskData struct {
-	Text string `json:"text"`
+	UserID uint   `json:"user_id"`
+	Text   string `json:"text"`
 }
 type Task struct {
 	ID   int    `json:"id"`
@@ -21,10 +23,11 @@ func AddTask(ctx context.Context, a *AddTaskData) error {
 		return errors.New("empty text")
 	}
 
-	err := gorm.G[storage.Task](storage.Db).Create(ctx, &storage.Task{Text: a.Text, Done: false})
+	err := gorm.G[storage.Task](storage.Db).Create(ctx, &storage.Task{UserID: a.UserID, Text: a.Text, Done: false})
 	if err != nil {
 		return err
 	}
+	fmt.Println(a.UserID)
 	return nil
 }
 
