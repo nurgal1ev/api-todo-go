@@ -3,6 +3,7 @@ package api
 import (
 	"cli-todo/auth"
 	"cli-todo/commands"
+	"cli-todo/errors"
 	"cli-todo/storage"
 	"encoding/json"
 	"fmt"
@@ -15,25 +16,13 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	var data commands.AddTaskData
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
-		msg := "fail to write HTTP response: " + err.Error()
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
+		errors.WriteError(w, err, "fail to write HTTP response: ")
 		return
 	}
 	fmt.Println(data)
 	err = commands.AddTask(r.Context(), &data)
 	if err != nil {
-		msg := "fail to write HTTP response: " + err.Error()
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
+		errors.WriteError(w, err, "fail to write HTTP response: ")
 		return
 	}
 }
@@ -42,25 +31,13 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 	taskID := r.URL.Query().Get("id")
 	atoi, err := strconv.Atoi(taskID)
 	if err != nil {
-		msg := "fail to write HTTP response: "
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
+		errors.WriteError(w, err, "fail to write HTTP response: ")
 		return
 	}
 	var data commands.AddTaskData
 	err = json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
-		msg := "fail to write HTTP response: "
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
+		errors.WriteError(w, err, "fail to write HTTP response: ")
 		return
 	}
 	task := storage.Task{Text: data.Text}

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"cli-todo/errors"
 	"cli-todo/storage"
 	"encoding/json"
 	"fmt"
@@ -17,13 +18,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var data UserData
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
-		msg := "fail to write HTTP response: " + err.Error()
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
+		errors.WriteError(w, err, "fail to parse body")
 		return
 	}
 
@@ -54,13 +49,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var data UserData
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
-		msg := "fail to write HTTP response: " + err.Error()
-		_, err := w.Write([]byte(msg))
-		if err != nil {
-			fmt.Println("fail to write HTTP response: " + err.Error())
-			return
-		}
-		fmt.Println(msg)
+		errors.WriteError(w, err, "fail to parse body")
 		return
 	}
 
@@ -68,7 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	username := storage.Db.Where("username = ?", data.Username).First(&storageUser)
 
 	if username.Error != nil {
-		msg := "fail to write HTTP response: " + username.Error.Error()
+		msg := "failed to fetch username: " + username.Error.Error()
 		_, err := w.Write([]byte(msg))
 		if err != nil {
 			fmt.Println("fail to write HTTP response: " + err.Error())
