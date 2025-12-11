@@ -130,11 +130,11 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 
 func HTTPServer() {
 	router := http.NewServeMux()
-	router.HandleFunc("/add", addHandler)
-	router.HandleFunc("/list", listHandler)
-	router.HandleFunc("/done", doneHandler)
-	router.HandleFunc("/delete", deleteHandler)
-	router.HandleFunc("/update", updateHandler)
+	router.Handle("/add", auth.AuthMiddleware(http.HandlerFunc(addHandler)))
+	router.Handle("/list", auth.AuthMiddleware(http.HandlerFunc(listHandler)))
+	router.Handle("/done", auth.AuthMiddleware(http.HandlerFunc(doneHandler)))
+	router.Handle("/delete", auth.AuthMiddleware(http.HandlerFunc(deleteHandler)))
+	router.Handle("/update", auth.AuthMiddleware(http.HandlerFunc(updateHandler)))
 	router.HandleFunc("/auth/register", auth.Register)
 	router.HandleFunc("/auth/login", auth.Login)
 

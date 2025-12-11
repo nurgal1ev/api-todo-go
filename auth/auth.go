@@ -5,7 +5,11 @@ import (
 	"cli-todo/storage"
 	"encoding/json"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 )
 
 type UserData struct {
@@ -13,6 +17,12 @@ type UserData struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+type LoginResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
+var secretKey = []byte(os.Getenv("JWT_SECRET"))
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var data UserData
@@ -78,7 +88,59 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	payload := jwt.MapClaims{
+		"sub": data.Username,
+		"exp": time.Now().Add(time.Hour * 72).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		errors.WriteError(w, err, "fail to sign token")
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("successful login"))
+
+	marshal, err := json.Marshal(LoginResponse{AccessToken: tokenString})
+	if err != nil {
+		return
+	}
+
+	w.Write(marshal)
+
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Извлекаем токен из заголовка Authorization в формате Bearer
+		tokenString := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
+		if tokenString == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		// Пытаемся разобрать и проверить токен
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return secretKey, nil // Важно использовать тот же секретный ключ для проверки токена
+		})
+
+		if err != nil {
+			http.Error(w, "Forbidden", http.StatusUnauthorized)
+			fmt.Println(err)
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			// Успешная аутентификация, продолжаем обработку запроса
+			r.Header.Set("user_id", claims["sub"].(string))
+			next.ServeHTTP(w, r)
+		} else {
+			// Аутентификация не удалась
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+	})
 }
