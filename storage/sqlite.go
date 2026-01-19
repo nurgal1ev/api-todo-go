@@ -14,16 +14,21 @@ type User struct {
 	Username     string
 	Email        string
 	PasswordHash string
+	Board        []Board
+}
 
-	Tasks []Task
+type Board struct {
+	gorm.Model
+	Name   string
+	UserID uint
+	User   User
+	Tasks  []Task
 }
 type Task struct {
 	gorm.Model
-	Text string
-	Done bool
-
-	UserID uint
-	User   User
+	Text    string
+	BoardID uint
+	Board   Board
 }
 
 func NewDB() {
@@ -33,5 +38,5 @@ func NewDB() {
 		log.Fatal(err)
 	}
 
-	Db.AutoMigrate(&User{}, &Task{})
+	Db.AutoMigrate(&User{}, &Board{}, &Task{})
 }
