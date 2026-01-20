@@ -24,7 +24,7 @@ profile.cov
 go.work
 go.work.sum
 ../storage.db
-.idea
+.idea/
 
 # env file
 .env

@@ -17,6 +17,14 @@ type User struct {
 
 	Tasks []Task
 }
+
+type Board struct {
+	gorm.Model
+	Name string
+
+	UserID uint
+	User   User
+}
 type Task struct {
 	gorm.Model
 	Text string
