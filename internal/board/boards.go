@@ -31,3 +31,11 @@ func DeleteBoard(ctx context.Context, boardID string) error {
 	}
 	return nil
 }
+
+func UpdateBoard(ctx context.Context, name string, board *storage.Board) error {
+	_, err := gorm.G[storage.Board](storage.Db).Where("name = ?", name).Updates(ctx, *board)
+	if err != nil {
+		return err
+	}
+	return nil
+}
