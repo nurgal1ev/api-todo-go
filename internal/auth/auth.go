@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"cli-todo/errors"
-	"cli-todo/storage"
+	"cli-todo/internal/errors"
+	"cli-todo/internal/storage"
 	"encoding/json"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
@@ -114,19 +114,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Извлекаем токен из заголовка Authorization в формате Bearer
 		tokenString := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
 		if tokenString == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		// Пытаемся разобрать и проверить токен
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return secretKey, nil // Важно использовать тот же секретный ключ для проверки токена
+			return secretKey, nil
 		})
 
 		if err != nil {
@@ -135,11 +133,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			// Успешная аутентификация, продолжаем обработку запроса
 			r.Header.Set("user_id", claims["sub"].(string))
 			next.ServeHTTP(w, r)
 		} else {
-			// Аутентификация не удалась
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
 	})

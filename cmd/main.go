@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cli-todo/api"
-	"cli-todo/storage"
+	"cli-todo/internal/api"
+	"cli-todo/internal/storage"
 )
 
 func main() {

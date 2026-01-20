@@ -1,10 +1,10 @@
 package api
 
 import (
-	"cli-todo/auth"
-	"cli-todo/commands"
-	"cli-todo/errors"
-	"cli-todo/storage"
+	"cli-todo/internal/auth"
+	"cli-todo/internal/commands"
+	"cli-todo/internal/errors"
+	"cli-todo/internal/storage"
 	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"

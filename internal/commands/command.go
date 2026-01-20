@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"cli-todo/storage"
+	"cli-todo/internal/storage"
 	"context"
 	"errors"
 	"fmt"
