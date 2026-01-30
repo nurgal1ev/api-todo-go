@@ -40,19 +40,20 @@ func DeleteBoardHandler(w http.ResponseWriter, r *http.Request) {
 
 	atoi, err := strconv.Atoi(boardID)
 	if err != nil {
-		msg := "taskId is invalid"
+		msg := "BoardId is invalid"
 		_, err := w.Write([]byte(msg))
 		if err != nil {
 			fmt.Println("fail to write HTTP response: " + err.Error())
 			return
 		}
+		return
 	}
 
 	err = DeleteBoard(r.Context(), atoi)
 	if err != nil {
 		return
 	}
-	write, err := w.Write([]byte("task deleted"))
+	write, err := w.Write([]byte("board deleted"))
 	if err != nil {
 		return
 	}
