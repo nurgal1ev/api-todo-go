@@ -1,14 +1,16 @@
 package board
 
 import (
-	"cli-todo/internal/storage"
+	"api-todo-go/internal/storage"
 	"context"
 	"errors"
 	"gorm.io/gorm"
 )
 
 type CreateBoardData struct {
-	Name string `json:"name"`
+	Name        string `json:"board_name"`
+	Description string `json:"board_description"`
+	Status      string `json:"board_status"`
 }
 
 func CreateBoard(ctx context.Context, b *CreateBoardData) error {
@@ -16,7 +18,7 @@ func CreateBoard(ctx context.Context, b *CreateBoardData) error {
 		return errors.New("board name can not be empty")
 	}
 
-	err := gorm.G[storage.Board](storage.Db).Create(ctx, &storage.Board{Name: b.Name})
+	err := gorm.G[storage.Board](storage.Db).Create(ctx, &storage.Board{Name: b.Name, Description: b.Description, Status: b.Status})
 	if err != nil {
 		return err
 	}
@@ -24,7 +26,7 @@ func CreateBoard(ctx context.Context, b *CreateBoardData) error {
 	return nil
 }
 
-func DeleteBoard(ctx context.Context, boardID string) error {
+func DeleteBoard(ctx context.Context, boardID int) error {
 	_, err := gorm.G[storage.Board](storage.Db).Where("id = ?", boardID).Delete(ctx)
 	if err != nil {
 		return err
@@ -32,8 +34,8 @@ func DeleteBoard(ctx context.Context, boardID string) error {
 	return nil
 }
 
-func UpdateBoard(ctx context.Context, name string, board *storage.Board) error {
-	_, err := gorm.G[storage.Board](storage.Db).Where("name = ?", name).Updates(ctx, *board)
+func UpdateBoard(ctx context.Context, id int, board *storage.Board) error {
+	_, err := gorm.G[storage.Board](storage.Db).Where("id = ?", id).Updates(ctx, *board)
 	if err != nil {
 		return err
 	}

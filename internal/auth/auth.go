@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"cli-todo/internal/errors"
-	"cli-todo/internal/storage"
+	"api-todo-go/internal/errors"
+	"api-todo-go/internal/storage"
 	"encoding/json"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"

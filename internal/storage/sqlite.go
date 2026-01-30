@@ -20,7 +20,9 @@ type User struct {
 
 type Board struct {
 	gorm.Model
-	Name string
+	Name        string
+	Description string
+	Status      string
 
 	UserID uint
 	User   User
@@ -41,5 +43,5 @@ func NewDB() {
 		log.Fatal(err)
 	}
 
-	Db.AutoMigrate(&User{}, &Task{})
+	Db.AutoMigrate(&User{}, &Task{}, &Board{})
 }

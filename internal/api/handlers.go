@@ -1,10 +1,9 @@
 package api
 
 import (
-	"cli-todo/internal/auth"
-	"cli-todo/internal/commands"
-	"cli-todo/internal/errors"
-	"cli-todo/internal/storage"
+	"api-todo-go/internal/commands"
+	"api-todo-go/internal/errors"
+	"api-todo-go/internal/storage"
 	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
@@ -126,28 +125,4 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(write)
-}
-
-func HTTPServer() {
-	router := http.NewServeMux()
-	router.Handle("/add", auth.AuthMiddleware(http.HandlerFunc(addHandler)))
-	router.Handle("/list", auth.AuthMiddleware(http.HandlerFunc(listHandler)))
-	router.Handle("/done", auth.AuthMiddleware(http.HandlerFunc(doneHandler)))
-	router.Handle("/delete", auth.AuthMiddleware(http.HandlerFunc(deleteHandler)))
-	router.Handle("/update", auth.AuthMiddleware(http.HandlerFunc(updateHandler)))
-	router.HandleFunc("/auth/register", auth.Register)
-	router.HandleFunc("/auth/login", auth.Login)
-
-	server := http.Server{
-		Addr:    ":8080",
-		Handler: router,
-	}
-
-	fmt.Println("http server started")
-
-	err := server.ListenAndServe()
-	if err != nil {
-		fmt.Println("HTTP server error", err)
-		return
-	}
 }

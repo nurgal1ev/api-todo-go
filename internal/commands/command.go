@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"cli-todo/internal/storage"
+	"api-todo-go/internal/storage"
 	"context"
 	"errors"
 	"fmt"
@@ -11,11 +11,6 @@ import (
 type AddTaskData struct {
 	UserID uint   `json:"user_id"`
 	Text   string `json:"text"`
-}
-type Task struct {
-	ID   int    `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
 }
 
 func AddTask(ctx context.Context, a *AddTaskData) error {
