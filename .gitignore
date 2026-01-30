@@ -23,7 +23,7 @@ profile.cov
 # Go workspace file
 go.work
 go.work.sum
-../storage.db
+storage.db
 .idea/
 
 # env file
