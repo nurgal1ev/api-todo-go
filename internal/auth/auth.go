@@ -130,6 +130,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			http.Error(w, "Forbidden", http.StatusUnauthorized)
 			fmt.Println(err)
+			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

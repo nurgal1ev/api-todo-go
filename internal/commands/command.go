@@ -13,12 +13,16 @@ type AddTaskData struct {
 	Text   string `json:"text"`
 }
 
+type MoveTaskData struct {
+	StatusID uint `json:"status_id"`
+}
+
 func AddTask(ctx context.Context, a *AddTaskData) error {
 	if a.Text == "" {
 		return errors.New("empty text")
 	}
 
-	err := gorm.G[storage.Task](storage.Db).Create(ctx, &storage.Task{UserID: a.UserID, Text: a.Text, Done: false})
+	err := gorm.G[storage.Task](storage.Db).Create(ctx, &storage.Task{UserID: a.UserID, Text: a.Text, StatusID: 1})
 	if err != nil {
 		return err
 	}
@@ -34,8 +38,8 @@ func UpdateTask(ctx context.Context, id int, task *storage.Task) error {
 	return nil
 }
 
-func DoneTask(ctx context.Context, id int64) error {
-	_, err := gorm.G[storage.Task](storage.Db).Where("id = ?", id).Updates(ctx, storage.Task{Done: true})
+func MoveTask(ctx context.Context, taskID uint, statusID uint) error {
+	_, err := gorm.G[storage.Task](storage.Db).Where("id = ?", taskID).Update(ctx, "status_id", statusID)
 	if err != nil {
 		return err
 	}

@@ -11,7 +11,7 @@ func HTTPServer() {
 	router := http.NewServeMux()
 	router.Handle("/add", auth.AuthMiddleware(http.HandlerFunc(addHandler)))
 	router.Handle("/list", auth.AuthMiddleware(http.HandlerFunc(listHandler)))
-	router.Handle("/done", auth.AuthMiddleware(http.HandlerFunc(doneHandler)))
+	router.Handle("/change-status", auth.AuthMiddleware(http.HandlerFunc(moveHandler)))
 	router.Handle("/delete", auth.AuthMiddleware(http.HandlerFunc(deleteHandler)))
 	router.Handle("/update", auth.AuthMiddleware(http.HandlerFunc(updateHandler)))
 	router.Handle("/create-board", auth.AuthMiddleware(http.HandlerFunc(board.CreateBoardHandler)))

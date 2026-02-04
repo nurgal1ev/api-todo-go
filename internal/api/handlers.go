@@ -64,7 +64,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func doneHandler(w http.ResponseWriter, r *http.Request) {
+func moveHandler(w http.ResponseWriter, r *http.Request) {
 	taskId := r.URL.Query().Get("id")
 	if taskId == "" {
 		msg := "fail to write HTTP response: task id is required"
@@ -74,6 +74,7 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
 	atoi, err := strconv.Atoi(taskId)
 	if err != nil {
 		msg := "taskId is invalid"
@@ -84,16 +85,28 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = commands.DoneTask(r.Context(), int64(atoi))
+	var data commands.MoveTaskData
+	err = json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if data.StatusID == 0 {
+		http.Error(w, "status_id is required", http.StatusBadRequest)
+		return
+	}
+
+	err = commands.MoveTask(r.Context(), uint(atoi), data.StatusID)
 	if err != nil {
 		return
 	}
-	write, err := w.Write([]byte("task done"))
+	write, err := w.Write([]byte("task moved"))
 	if err != nil {
 		return
 	}
 	fmt.Println(write)
-
+	w.WriteHeader(http.StatusOK)
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {

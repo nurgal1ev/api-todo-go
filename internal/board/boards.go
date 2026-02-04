@@ -4,24 +4,42 @@ import (
 	"api-todo-go/internal/storage"
 	"context"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 )
 
 type CreateBoardData struct {
 	Name        string `json:"board_name"`
 	Description string `json:"board_description"`
-	Status      string `json:"board_status"`
 }
+
+var defaultStatuses = []string{"todo", "in progress", "done"}
 
 func CreateBoard(ctx context.Context, b *CreateBoardData) error {
 	if b.Name == "" {
 		return errors.New("board name can not be empty")
 	}
 
-	err := gorm.G[storage.Board](storage.Db).Create(ctx, &storage.Board{Name: b.Name, Description: b.Description, Status: b.Status})
+	currentBoard := &storage.Board{
+		Name:        b.Name,
+		Description: b.Description,
+	}
+
+	err := gorm.G[storage.Board](storage.Db).Create(ctx, currentBoard)
 	if err != nil {
 		return err
 	}
+
+	for _, status := range defaultStatuses {
+		err := gorm.G[storage.Status](storage.Db).Create(ctx, &storage.Status{
+			Name:    status,
+			BoardID: currentBoard.ID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Printf("Created board with ID: %d\n", currentBoard.ID)
 
 	return nil
 }
