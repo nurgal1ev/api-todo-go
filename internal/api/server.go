@@ -3,34 +3,30 @@ package api
 import (
 	"api-todo-go/internal/auth"
 	"api-todo-go/internal/board"
-	"fmt"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
 func HTTPServer() {
-	router := http.NewServeMux()
-	router.Handle("/add", auth.AuthMiddleware(http.HandlerFunc(addHandler)))
-	router.Handle("/list", auth.AuthMiddleware(http.HandlerFunc(listHandler)))
-	router.Handle("/change-status", auth.AuthMiddleware(http.HandlerFunc(moveHandler)))
-	router.Handle("/delete", auth.AuthMiddleware(http.HandlerFunc(deleteHandler)))
-	router.Handle("/update", auth.AuthMiddleware(http.HandlerFunc(updateHandler)))
-	router.Handle("/create-board", auth.AuthMiddleware(http.HandlerFunc(board.CreateBoardHandler)))
-	router.Handle("/delete-board", auth.AuthMiddleware(http.HandlerFunc(board.DeleteBoardHandler)))
-	router.Handle("/update-board", auth.AuthMiddleware(http.HandlerFunc(board.UpdateBoardHandler)))
-	router.Handle("/get-board", auth.AuthMiddleware(http.HandlerFunc(board.GetBoardHandler)))
-	router.HandleFunc("/auth/register", auth.Register)
-	router.HandleFunc("/auth/login", auth.Login)
+	r := chi.NewRouter()
 
-	server := http.Server{
-		Addr:    ":8080",
-		Handler: router,
-	}
+	r.Group(func(r chi.Router) {
+		r.Use(auth.AuthMiddleware)
 
-	fmt.Println("http server started")
+		r.Post("/tasks", addHandler)
+		r.Get("/tasks", listHandler)
+		r.Patch("/tasks/{id}/status", moveHandler)
+		r.Put("/tasks/{id}", updateHandler)
+		r.Delete("/tasks/{id}", deleteHandler)
 
-	err := server.ListenAndServe()
+		r.Post("/boards", board.CreateBoardHandler)
+		r.Get("/boards/{id}", board.GetBoardHandler)
+		r.Patch("/boards/{id}", board.UpdateBoardHandler)
+		r.Delete("/boards/{id}", board.DeleteBoardHandler)
+	})
+
+	err := http.ListenAndServe(":3000", r)
 	if err != nil {
-		fmt.Println("HTTP server error", err)
 		return
 	}
 }

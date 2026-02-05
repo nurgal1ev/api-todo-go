@@ -6,6 +6,7 @@ import (
 	"api-todo-go/internal/storage"
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -24,10 +25,13 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		errors.WriteError(w, err, "fail to write HTTP response: ")
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("task created"))
 }
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
-	taskID := r.URL.Query().Get("id")
+	taskID := chi.URLParam(r, "id")
 	atoi, err := strconv.Atoi(taskID)
 	if err != nil {
 		errors.WriteError(w, err, "fail to write HTTP response: ")
@@ -65,7 +69,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func moveHandler(w http.ResponseWriter, r *http.Request) {
-	taskId := r.URL.Query().Get("id")
+	taskId := chi.URLParam(r, "id")
 	if taskId == "" {
 		msg := "fail to write HTTP response: task id is required"
 		_, err := w.Write([]byte(msg))
@@ -101,16 +105,16 @@ func moveHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	write, err := w.Write([]byte("task moved"))
 	if err != nil {
 		return
 	}
 	fmt.Println(write)
-	w.WriteHeader(http.StatusOK)
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
-	taskId := r.URL.Query().Get("id")
+	taskId := chi.URLParam(r, "id")
 	if taskId == "" {
 		msg := "fail to write HTTP response: task id is required"
 		_, err := w.Write([]byte(msg))
@@ -133,6 +137,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	write, err := w.Write([]byte("task deleted"))
 	if err != nil {
 		return
