@@ -13,16 +13,16 @@ func HTTPServer() {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.AuthMiddleware)
 
-		r.Post("/tasks", addHandler)
-		r.Get("/tasks", listHandler)
-		r.Patch("/tasks/{id}/status", moveHandler)
-		r.Put("/tasks/{id}", updateHandler)
-		r.Delete("/tasks/{id}", deleteHandler)
+		r.Post("/add", addHandler)
+		r.Get("/list", listHandler)
+		r.Patch("/change-status", moveHandler)
+		r.Put("/update", updateHandler)
+		r.Delete("/delete", deleteHandler)
 
-		r.Post("/boards", board.CreateBoardHandler)
-		r.Get("/boards/{id}", board.GetBoardHandler)
-		r.Patch("/boards/{id}", board.UpdateBoardHandler)
-		r.Delete("/boards/{id}", board.DeleteBoardHandler)
+		r.Post("/create-board", board.CreateBoardHandler)
+		r.Get("/get-board", board.GetBoardHandler)
+		r.Patch("/update-board", board.UpdateBoardHandler)
+		r.Delete("/delete-board", board.DeleteBoardHandler)
 	})
 
 	err := http.ListenAndServe(":3000", r)
