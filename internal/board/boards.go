@@ -59,3 +59,21 @@ func UpdateBoard(ctx context.Context, id int, board *storage.Board) error {
 	}
 	return nil
 }
+
+func InviteUserToBoard(ctx context.Context, boardID uint, userID uint, role string) error {
+	_, err := gorm.G[storage.UserBoards](storage.Db).Where("board_id = ? AND user_id = ?", boardID, userID).First(ctx)
+
+	if err == nil {
+		return errors.New("user already in board")
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	return gorm.G[storage.UserBoards](storage.Db).Create(ctx, &storage.UserBoards{
+		BoardID: boardID,
+		UserID:  userID,
+		Role:    role,
+	})
+}

@@ -5,6 +5,7 @@ import (
 	"api-todo-go/internal/storage"
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -28,7 +29,7 @@ func CreateBoardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteBoardHandler(w http.ResponseWriter, r *http.Request) {
-	boardID := r.URL.Query().Get("id")
+	boardID := chi.URLParam(r, "id")
 	if boardID == "" {
 		msg := "fail to write HTTP response: task id is required"
 		_, err := w.Write([]byte(msg))
@@ -80,7 +81,7 @@ func GetBoardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateBoardHandler(w http.ResponseWriter, r *http.Request) {
-	boardID := r.URL.Query().Get("id")
+	boardID := chi.URLParam(r, "id")
 	atoi, err := strconv.Atoi(boardID)
 	if err != nil {
 		errors.WriteError(w, err, "fail to write HTTP response: ")
@@ -102,4 +103,34 @@ func UpdateBoardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("board updated"))
+}
+
+func InviteUserHandler(w http.ResponseWriter, r *http.Request) {
+	boardIDStr := chi.URLParam(r, "boardID")
+
+	boardID, err := strconv.Atoi(boardIDStr)
+	if err != nil {
+		errors.WriteError(w, err, "fail to write HTTP response: ")
+		return
+	}
+
+	type InviteUserData struct {
+		UserID uint   `json:"userId"`
+		Role   string `json:"role"`
+	}
+
+	var data InviteUserData
+	err = json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		errors.WriteError(w, err, "fail to write HTTP response: ")
+		return
+	}
+
+	err = InviteUserToBoard(r.Context(), data.UserID, uint(boardID), data.Role)
+	if err != nil {
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("board invited"))
 }

@@ -42,6 +42,13 @@ type Task struct {
 	User     User
 }
 
+type UserBoards struct {
+	gorm.Model
+	BoardID uint
+	UserID  uint
+	Role    string
+}
+
 func NewDB() {
 	var err error
 	Db, err = gorm.Open(sqlite.Open("./storage.db"), &gorm.Config{})
